@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reaction Time Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      button {
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Reaction Time Test</h1>
+    <h3 id="best-result">Fastest Reaction: N/A</h3>
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button id="start-btn" disabled>Start</button>
+  </body>
+  <script>
+    const startBtn = document.getElementById("start-btn");
+    const usernameInput = document.getElementById("username");
+    const bestResult = document.getElementById("best-result");
+
+    usernameInput.addEventListener("input", () => {
+      startBtn.disabled = usernameInput.value.trim() === "";
+      console.log(startBtn.disabled);
+    });
+
+    startBtn.addEventListener("click", async () => {
+      startBtn.textContent = "Wait...";
+      startBtn.disabled = true;
+      usernameInput.disabled = true;
+
+      const startTime = Math.random() * 15000 + 2000;
+      await new Promise((resolve) => setTimeout(resolve, startTime));
+
+      startBtn.textContent = "Click me!";
+      startBtn.style.backgroundColor = "red";
+
+      const reactionStart = performance.now();
+      startBtn.disabled = false;
+      startBtn.onclick = async () => {
+        const reactionTime = performance.now() - reactionStart;
+        startBtn.textContent = "Wait!";
+        startBtn.style.backgroundColor = "gray";
+        startBtn.onclick = null;
+        usernameInput.disabled = false;
+
+        const response = await fetch("/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: usernameInput.value,
+            time: reactionTime,
+          }),
+        });
+
+        const best = await response.json();
+        bestResult.textContent = `Fastest Reaction: ${
+          best.name
+        } - ${best.time.toFixed(2)}ms`;
+      };
+    });
+  </script>
+</html>
